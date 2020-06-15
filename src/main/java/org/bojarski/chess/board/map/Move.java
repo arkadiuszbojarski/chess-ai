@@ -1,4 +1,4 @@
-package org.bojarski.chess;
+package org.bojarski.chess.board.map;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -6,8 +6,8 @@ import lombok.Value;
 import lombok.experimental.Accessors;
 
 import static java.lang.String.format;
-import static org.bojarski.chess.MoveType.*;
-import static org.bojarski.chess.PieceKind.*;
+import static org.bojarski.chess.board.map.MoveType.*;
+import static org.bojarski.chess.board.map.PieceKind.*;
 
 @Value
 @Accessors(fluent = true)

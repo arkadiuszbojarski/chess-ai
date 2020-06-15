@@ -1,27 +1,26 @@
-package org.bojarski.chess;
+package org.bojarski.chess.board.map;
 
 import org.bojarski.player.ChessPlayer;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.InstanceOfAssertFactories.array;
-import static org.bojarski.chess.Field.*;
-import static org.bojarski.chess.PieceKind.*;
-import static org.bojarski.chess.Side.BLACK;
-import static org.bojarski.chess.Side.WHITE;
+import static org.bojarski.chess.board.map.Field.*;
+import static org.bojarski.chess.board.map.Move.move;
+import static org.bojarski.chess.board.map.PieceKind.*;
+import static org.bojarski.chess.board.map.Side.BLACK;
+import static org.bojarski.chess.board.map.Side.WHITE;
 
 public class BoardTest {
 
     @Test
     public void shouldnotfallforgambit() {
         var board = Board.initialized();
-        board = board.perform(Move.move(D2, D4));
-        board = board.perform(Move.move(D7, D5));
-        board = board.perform(Move.move(C2, C4));
+        board = board.perform(move(D2, D4));
+        board = board.perform(move(D7, D5));
+        board = board.perform(move(C2, C4));
 
         final var player = new ChessPlayer();
         final var move = player.findMove(board, 4).next();
@@ -86,6 +85,22 @@ public class BoardTest {
         var move = player.findMove(board, 5).next();
 
         board.perform(move);
+    }
+
+    @Test
+    public void blackmovetest() {
+        var board = Board.empty()
+                .placePiece(WHITE, PAWN, C2)
+                .placePiece(WHITE, KING, C1)
+                .placePiece(BLACK, ROOK, C7);
+
+        board = board.perform(move(C2, C3));
+        final var player = new ChessPlayer();
+        while (!board.gameover()) {
+            final var move = player.findMove(board, 4).next();
+            board = board.perform(move);
+            System.out.println(board.print());
+        }
     }
 
     @Test

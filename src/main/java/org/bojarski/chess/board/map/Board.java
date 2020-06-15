@@ -1,4 +1,4 @@
-package org.bojarski.chess;
+package org.bojarski.chess.board.map;
 
 import java.util.*;
 
@@ -9,23 +9,23 @@ import static java.util.stream.Collectors.toUnmodifiableList;
 public class Board {
 
     public static Board initialized() {
-        return new Board(Side.WHITE, Map.of(), 0).initialize();
+        return board(Side.WHITE, Map.of(), 0).initialize();
     }
     public static Board empty() {
-        return new Board(Side.WHITE, Map.of(), 0);
+        return board(Side.WHITE, Map.of(), 0);
+    }
+    private static Board board(Side side, Map<Field, Piece> pieces, Integer count) {
+        return new Board(side, pieces, count);
     }
 
     private final Map<Field, Piece> pieces;
-
     private final Side movingside;
-    private final Side opponent;
 
     private final Integer count;
 
     private List<Move> moves;
 
     private Board(Side movingside, Map<Field, Piece> pieces, Integer count) {
-        this.opponent = movingside.flip();
         this.movingside = movingside;
 
         this.pieces = pieces;
@@ -82,9 +82,8 @@ public class Board {
     public Board removePiece(Field position) {
         final var piecesCopy = new HashMap<>(pieces);
         piecesCopy.remove(position);
-        final var withPerformedMove = new Board(movingside, piecesCopy, count);
 
-        return withPerformedMove;
+        return board(movingside, piecesCopy, count);
     }
 
     public Board placePiece(Side side, PieceKind piece, Field position) {
@@ -95,9 +94,8 @@ public class Board {
         final var placedPiece = piece.of(side, position);
         final var piecesCopy = new HashMap<>(pieces);
         piecesCopy.put(placedPiece.position, placedPiece);
-        final var withPlacedPiece = new Board(movingside, piecesCopy, count);
 
-        return withPlacedPiece;
+        return board(movingside, piecesCopy, count);
     }
 
     public Board perform(Move move) {
@@ -117,16 +115,15 @@ public class Board {
         piecesCopy.remove(piece.position);
         final var movedPiece = piece.perform(move, this);
         piecesCopy.put(movedPiece.position, movedPiece);
-        final var withPerformedMove = new Board(opponent, piecesCopy, count + 1);
 
-        return withPerformedMove;
+        return board(movingside.flip(), piecesCopy, count + 1);
     }
 
     public List<Move> moves() {
         if (moves == null) {
             moves = moves(movingside).stream()
                     .filter(move -> perform(move)
-                            .moves(opponent).stream()
+                            .moves(movingside.flip()).stream()
                             .map(Move::type)
                             .noneMatch(MoveType::check))
                     .collect(toUnmodifiableList());

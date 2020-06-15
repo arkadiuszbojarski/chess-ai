@@ -1,23 +1,26 @@
 package org.bojarski;
 
-import org.bojarski.chess.Board;
-import org.bojarski.chess.Field;
-import org.bojarski.chess.Move;
-import org.bojarski.chess.PieceKind;
+import org.bojarski.chess.board.map.Board;
+import org.bojarski.chess.board.map.Field;
+import org.bojarski.chess.board.map.Move;
+import org.bojarski.chess.board.map.PieceKind;
 import org.bojarski.player.ChessPlayer;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Integer.parseInt;
-import static org.bojarski.chess.Move.move;
-import static org.bojarski.chess.Side.BLACK;
-import static org.bojarski.chess.Side.WHITE;
+import static org.bojarski.chess.board.map.Move.move;
+import static org.bojarski.chess.board.map.Side.BLACK;
+import static org.bojarski.chess.board.map.Side.WHITE;
 
 public class Application {
     public static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
     public static final String SEPARATOR = " ";
+    private static final List<Move> moves = new ArrayList<>();
     private static ChessPlayer player = new ChessPlayer();
     private static Board board = Board.initialized();
     private static int defaultDepth = 4;
@@ -58,6 +61,12 @@ public class Application {
                     case "wt":
                         waittime(arguments);
                         break;
+                    case "ap":
+                        autoplay();
+                        break;
+                    case "pm":
+                        printmoves();
+                        break;
                 }
 
                 System.out.println(board.print());
@@ -65,6 +74,20 @@ public class Application {
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
+        }
+    }
+
+    private static void printmoves() {
+        moves.forEach(System.out::println);
+    }
+
+    private static void autoplay() {
+        while (!board.gameover()) {
+            final var move = player.findMove(board, defaultDepth).next();
+            board = board.perform(move);
+            moves.add(move);
+            System.out.println(move);
+            System.out.println(board.print());
         }
     }
 
@@ -92,6 +115,7 @@ public class Application {
         final var end = System.nanoTime();
         System.out.println(move + " found in " + ((end - start) / 1000000) + "ms");
         board = board.perform(move);
+        moves.add(move);
     }
 
     private static void makeMove(String arguments) {
@@ -102,6 +126,7 @@ public class Application {
         final var move = move(from, to);
         board = board.perform(move);
         System.out.println(move);
+        moves.add(move);
     }
 
     private static void placePiece(String arguments) {

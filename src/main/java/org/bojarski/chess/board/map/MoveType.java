@@ -1,4 +1,4 @@
-package org.bojarski.chess;
+package org.bojarski.chess.board.map;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;

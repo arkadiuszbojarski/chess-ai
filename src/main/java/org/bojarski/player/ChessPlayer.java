@@ -1,20 +1,18 @@
 package org.bojarski.player;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import org.bojarski.chess.*;
+import org.bojarski.chess.board.map.Board;
+import org.bojarski.chess.board.map.Field;
+import org.bojarski.chess.board.map.Move;
+import org.bojarski.chess.board.map.Piece;
 import org.bojarski.negamax.Domain;
 import org.bojarski.negamax.NegaMax;
-import org.bojarski.negamax.PrincipalVariation;
 import org.bojarski.negamax.Search;
 
 import java.util.Iterator;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
-import static org.bojarski.chess.PieceKind.*;
-import static org.bojarski.chess.Side.WHITE;
-import static org.bojarski.negamax.PrincipalVariation.head;
+import static org.bojarski.chess.board.map.Side.WHITE;
 
 public class ChessPlayer {
     private static final Domain<Board, Move> CHESS = Domain.<Board, Move>builder()
@@ -30,7 +28,7 @@ public class ChessPlayer {
         search = ALGORITHM.search(board, GOAL, depth);
         final var iterator = search.iterator();
 
-        return new MoveIterator(iterator);
+        return iterator;
     }
 
     public Iterator<Move> findMove(Board board) {
@@ -42,29 +40,27 @@ public class ChessPlayer {
         for (Piece piece : board.pieces()) {
             switch (piece.type()) {
                 case PAWN:
-                    result += (board.side() == WHITE ? 1 : -1) * (10 + scorepawn(piece));
+                    result += piece.side().rankAdvanceDirection() * (10 + scorepawn(piece));
                     break;
                 case KNIGHT:
-                    result += (board.side() == WHITE ? 1 : -1) * (30 + scorehorse(piece));
+                    result += piece.side().rankAdvanceDirection() * (30 + scorehorse(piece));
                     break;
                 case BISHOP:
-                    result += (board.side() == WHITE ? 1 : -1) * (30 + scorebishop(piece));
+                    result += piece.side().rankAdvanceDirection() * (30 + scorebishop(piece));
                     break;
                 case ROOK:
-                    result += (board.side() == WHITE ? 1 : -1) * 40.0;
+                    result += piece.side().rankAdvanceDirection() * 40.0;
                     break;
                 case QUEEN:
-                    result += (board.side() == WHITE ? 1 : -1) * 90.0;
+                    result += piece.side().rankAdvanceDirection() * 90.0;
                     break;
                 case KING:
-                    result += (board.side() == WHITE ? 1 : -1) * 1500.0;
+                    result += piece.side().rankAdvanceDirection() * 1500.0;
                     break;
             }
         }
 
-        result += (board.side() == WHITE ? 1 : -1) * 10 * board.count();
-
-        return result;
+        return board.side().rankAdvanceDirection() * result;
     }
 
     private static double scorebishop(Piece piece) {
@@ -90,33 +86,6 @@ public class ChessPlayer {
 
     private static Double score(Double[][] scores, Field position) {
         return scores[position.getRank()][position.getFile()];
-    }
-
-    private Move extract(PrincipalVariation<Board, Move> variation) {
-        var move = variation.action();
-        while (!variation.parent().equals(head())) {
-            variation = variation.parent();
-            move = variation.action();
-        }
-
-        return move;
-    }
-
-    @RequiredArgsConstructor
-    private class MoveIterator implements Iterator<Move> {
-
-        @NonNull
-        private final Iterator<PrincipalVariation<Board, Move>> iterator;
-
-        @Override
-        public boolean hasNext() {
-            return iterator.hasNext();
-        }
-
-        @Override
-        public Move next() {
-            return extract(iterator.next());
-        }
     }
 
     private static final Double[][] whitebishopscores = {

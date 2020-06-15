@@ -1,4 +1,4 @@
-package org.bojarski.chess;
+package org.bojarski.chess.board.map;
 
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static org.bojarski.chess.Field.field;
+import static org.bojarski.chess.board.map.Field.field;
 
 @Getter
 @Accessors(fluent = true)

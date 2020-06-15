@@ -3,13 +3,11 @@ package org.bojarski.negamax;
 import lombok.NonNull;
 import lombok.Value;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
-import java.util.stream.Stream;
-
-import static java.lang.Math.abs;
-import static java.util.Comparator.comparing;
 
 @Value(staticConstructor = "of")
 public class NegaMax<S, A> {
@@ -25,11 +23,11 @@ public class NegaMax<S, A> {
     }
 
     private class NegaMaxSearch implements Search<S, A> {
-        private final Map<PrincipalVariation<S, A>, Double> scores = new HashMap<>();
         private final Predicate<S> predicate;
 
         private boolean completed;
         private int depth;
+        private A optimal;
         private S start;
 
         public NegaMaxSearch(S start, Predicate<S> predicate, int depth) {
@@ -40,11 +38,11 @@ public class NegaMax<S, A> {
         }
 
         @Override
-        public Iterator<PrincipalVariation<S, A>> iterator() {
+        public Iterator<A> iterator() {
             return new PrincipalVariationIterator();
         }
 
-        private double negamax(S state, int depth, double alpha, double beta, PrincipalVariation<S, A> source) {
+        private double negamax(S state, int depth, double alpha, double beta) {
             final var goal = goal(state);
             if (goal) completed = true;
             if (depth == 0 || goal) {
@@ -53,14 +51,9 @@ public class NegaMax<S, A> {
 
             for (A action : actions(state)) {
                 final var child = domain.perform(state, action);
-                final var link = source.link(action);
-                final var score = -negamax(child, depth - 1, -beta, -alpha, link);
-                link.score(score);
+                final var score = -negamax(child, depth - 1, -beta, -alpha);
                 if (score >= beta) return beta;
-                if (score > alpha) {
-                    alpha = score;
-                    scores.put(link, score);
-                }
+                if (score > alpha) alpha = score;
             }
 
             return alpha;
@@ -74,7 +67,11 @@ public class NegaMax<S, A> {
             return predicate.test(state);
         }
 
-        private class PrincipalVariationIterator implements Iterator<PrincipalVariation<S, A>> {
+        private class PrincipalVariationIterator implements Iterator<A> {
+
+            private PrincipalVariationIterator() {
+                if (depth == 0 || goal(start)) completed = true;
+            }
 
             @Override
             public boolean hasNext() {
@@ -82,26 +79,23 @@ public class NegaMax<S, A> {
             }
 
             @Override
-            public PrincipalVariation<S, A> next() {
+            public A next() {
                 if (!hasNext()) throw new NoSuchElementException();
-                negamax(start, depth, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, PrincipalVariation.head());
-                depth += 2;
 
-                final var maximization = scores.entrySet().stream()
-                        .filter(entry -> entry.getKey().maximizing())
-                        .max(Map.Entry.comparingByValue());
+                var alpha = Double.NEGATIVE_INFINITY;
+                var beta = Double.POSITIVE_INFINITY;
 
-                final var minimization = scores.entrySet().stream()
-                        .filter(entry -> !entry.getKey().maximizing())
-                        .max(Map.Entry.comparingByValue());
-
-                final var optimal = Stream
-                        .of(maximization, minimization)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .max(comparing(entry -> abs(entry.getValue())))
-                        .map(Map.Entry::getKey)
-                        .orElse(null);
+                for (A action : actions(start)) {
+                    final var child = domain.perform(start, action);
+                    final var score = -negamax(child, depth - 1, -beta, -alpha);
+                    if (score >= beta) {
+                        break;
+                    }
+                    if (score > alpha) {
+                        optimal = action;
+                        alpha = score;
+                    }
+                }
 
                 return optimal;
             }

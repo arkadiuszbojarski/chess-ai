@@ -1,11 +1,11 @@
-package org.bojarski.chess;
+package org.bojarski.chess.board.map;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
-import static org.bojarski.chess.Field.field;
-import static org.bojarski.chess.Move.*;
+import static org.bojarski.chess.board.map.Field.field;
+import static org.bojarski.chess.board.map.Move.*;
 
 // TODO: implement en-passant
 public class Pawn extends Piece {

@@ -1,4 +1,4 @@
-package org.bojarski.chess;
+package org.bojarski.chess.board.map;
 
 import java.util.Optional;
 
