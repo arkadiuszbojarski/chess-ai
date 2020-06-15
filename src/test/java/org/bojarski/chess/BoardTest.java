@@ -4,15 +4,30 @@ import org.bojarski.player.ChessPlayer;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.InstanceOfAssertFactories.array;
 import static org.bojarski.chess.Field.*;
 import static org.bojarski.chess.PieceKind.*;
 import static org.bojarski.chess.Side.BLACK;
 import static org.bojarski.chess.Side.WHITE;
 
 public class BoardTest {
+
+    @Test
+    public void shouldnotfallforgambit() {
+        var board = Board.initialized();
+        board = board.perform(Move.move(D2, D4));
+        board = board.perform(Move.move(D7, D5));
+        board = board.perform(Move.move(C2, C4));
+
+        final var player = new ChessPlayer();
+        final var move = player.findMove(board, 4).next();
+
+        board.perform(move);
+    }
 
     @Test
     public void shouldNotHaveLegalMovesWhenCheckmated() {
@@ -68,7 +83,7 @@ public class BoardTest {
                 .placePiece(BLACK, KNIGHT, D5);
 
         final var player = new ChessPlayer();
-        var move = player.findMove(board, 2).next();
+        var move = player.findMove(board, 5).next();
 
         board.perform(move);
     }
@@ -115,13 +130,17 @@ public class BoardTest {
             board = board.perform(search.next());
         }
 
-        System.out.println("Starting test");
+        final var samples = 25;
+        var averange = 0;
+        for (int i = 0; i < samples; i++) {
+            final var start = System.nanoTime();
+            final var move = player.findMove(board, 6).next();
+            final var end = System.nanoTime();
 
-        final var start = System.nanoTime();
-        final var move = player.findMove(board, 4).next();
-        final var end = System.nanoTime();
-
-        System.out.println((end - start) / 1000000 + "ms");
+            final var duration = (end - start) / 1000000;
+            averange += duration;
+        }
+        System.out.println(averange / samples + "ms");
     }
 
 }

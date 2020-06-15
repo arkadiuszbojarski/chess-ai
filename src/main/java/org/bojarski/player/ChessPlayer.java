@@ -40,18 +40,38 @@ public class ChessPlayer {
     public static Double evaluate(Board board) {
         var result = 0.0;
         for (Piece piece : board.pieces()) {
-            if (piece.type() == PAWN) result += (board.side() == WHITE ? 1 : -1) * (10 + scorepawn(piece));
-            if (piece.type() == KNIGHT) result += (board.side() == WHITE ? 1 : -1) * (30 + scorehorse(piece));
-            if (piece.type() == BISHOP) result += (board.side() == WHITE ? 1 : -1) * 30.0;
-            if (piece.type() == ROOK) result += (board.side() == WHITE ? 1 : -1) * 50.0;
-            if (piece.type() == QUEEN) result += (board.side() == WHITE ? 1 : -1) * 90.0;
-            if (piece.type() == KING) result += (board.side() == WHITE ? 1 : -1) * 900.0;
+            switch (piece.type()) {
+                case PAWN:
+                    result += (board.side() == WHITE ? 1 : -1) * (10 + scorepawn(piece));
+                    break;
+                case KNIGHT:
+                    result += (board.side() == WHITE ? 1 : -1) * (30 + scorehorse(piece));
+                    break;
+                case BISHOP:
+                    result += (board.side() == WHITE ? 1 : -1) * (30 + scorebishop(piece));
+                    break;
+                case ROOK:
+                    result += (board.side() == WHITE ? 1 : -1) * 40.0;
+                    break;
+                case QUEEN:
+                    result += (board.side() == WHITE ? 1 : -1) * 90.0;
+                    break;
+                case KING:
+                    result += (board.side() == WHITE ? 1 : -1) * 1500.0;
+                    break;
+            }
         }
 
-        if (board.gameover()) result += (board.side() == WHITE ? 1 : -1) * 1000.0;
         result += (board.side() == WHITE ? 1 : -1) * 10 * board.count();
 
         return result;
+    }
+
+    private static double scorebishop(Piece piece) {
+        final var side = piece.side();
+        final var position = piece.position();
+
+        return side == WHITE ? score(whitebishopscores, position) : score(blackbishopscores, position);
     }
 
     private static double scorepawn(Piece piece) {
@@ -98,6 +118,19 @@ public class ChessPlayer {
             return extract(iterator.next());
         }
     }
+
+    private static final Double[][] whitebishopscores = {
+            {-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0},
+            {-1.0,  0.5,  0.0,  0.0,  0.0,  0.0,  0.5, -1.0},
+            {-1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, -1.0},
+            {-1.0,  0.0,  1.0,  1.0,  1.0,  1.0,  0.0, -1.0},
+            {-1.0,  0.5,  0.5,  1.0,  1.0,  0.5,  0.5, -1.0},
+            {-1.0,  0.0,  0.5,  1.0,  1.0,  0.5,  0.0, -1.0},
+            {-1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0},
+            {-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0},
+    };
+
+    private static final Double[][] blackbishopscores = rotate(whitebishopscores);
 
     private static final Double[][] whitehorsescores = {
             {-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0},
